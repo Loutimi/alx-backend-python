@@ -2,24 +2,25 @@ import os
 import mysql.connector
 from mysql.connector import Error
 
-
 def stream_users():
     """Stream user data as dictionaries for easier access"""
+    connection = None
+    cursor = None
     
     try:
         connection = mysql.connector.connect(
-            host="localhost",
-            user=os.environ["DB_USER"],
-            database="ALX_prodev",
-            password=os.environ["DB_PASSWORD"]
+            host=os.getenv("DB_HOST", "localhost"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database="ALX_prodev"
         )
-        
-        with connection.cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT user_id, name, email, age FROM user_data")
-            
-            for row in cursor:
-                yield row
-                
+
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT user_id, name, email, age FROM user_data")
+
+        for row in cursor:
+            yield row
+
     except Error as e:
         print(f"Database error: {e}")
         return
@@ -27,5 +28,7 @@ def stream_users():
         print(f"Unexpected error: {e}")
         return
     finally:
-        if 'connection' in locals() and connection.is_connected():
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
             connection.close()
