@@ -174,3 +174,4 @@ if __name__ == "__main__":
         conn.close()
     else:
         print("Failed to connect to database")
+        
