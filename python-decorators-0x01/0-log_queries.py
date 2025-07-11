@@ -8,9 +8,7 @@ def log_queries(func):
     def wrapper(*args, **kwargs):
         log = f"{datetime.now()} — Calling {func.__name__} with args: {args}, kwargs: {kwargs}\n"
         log += "Query is logged in\n\n"  
-        with open("query_log.txt", "a") as f:
-            f.write(log)
-
+        print(log)
         return func(*args, **kwargs)
     return wrapper
 
