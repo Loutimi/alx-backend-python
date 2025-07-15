@@ -2,7 +2,6 @@
 """A module for testing the utils module.
 """
 import unittest
-from typing import Dict, Tuple, Union
 from unittest.mock import patch, Mock
 from parameterized import parameterized
 from nose.tools import assert_equal
@@ -53,3 +52,28 @@ class TestGetJson(unittest.TestCase):
         # Assertions
         mock_get.assert_called_once_with(url)
         self.assertEqual(result, expected_payload)
+
+
+class TestMemoize(unittest.TestCase):
+    def test_memoize(self):
+        class TestClass:
+            def a_method(self):
+                return 42
+
+            @memoize
+            def a_property(self):
+                return self.a_method()
+
+        with patch.object(TestClass, 'a_method', return_value=42) as mock_method:
+            obj = TestClass()
+
+            # Call a_property twice
+            result1 = obj.a_property
+            result2 = obj.a_property
+
+            # Check result is correct both times
+            self.assertEqual(result1, 42)
+            self.assertEqual(result2, 42)
+
+            # Ensure a_method was only called once due to memoization
+            mock_method.assert_called_once()
