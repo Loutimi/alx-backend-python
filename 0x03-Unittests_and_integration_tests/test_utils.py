@@ -13,7 +13,6 @@ from utils import (
 )
 
 
-
 class TestAccessNestedMap(unittest.TestCase):
     """Tests the access_nested_map function."""
     @parameterized.expand([
@@ -33,5 +32,24 @@ class TestAccessNestedMap(unittest.TestCase):
     def test_access_nested_map_exception(self, nested_map, key_path, expected_exception):
         with self.assertRaises(expected_exception):
             access_nested_map(nested_map, key_path)
-    
 
+class TestGetJson(unittest.TestCase):
+    @parameterized.expand(
+        [
+            ("http://example.com", {"payload": True}),
+            ("http://holberton.io", {"payload": False}),
+        ]
+    )
+    @patch("requests.get")
+    def test_get_json(self, url, expected_payload, mock_get):
+        # Setup mock response
+        mock_response = Mock()
+        mock_response.json.return_value = expected_payload
+        mock_get.return_value = mock_response
+
+        # Call the function
+        result = get_json(url)
+
+        # Assertions
+        mock_get.assert_called_once_with(url)
+        self.assertEqual(result, expected_payload)
