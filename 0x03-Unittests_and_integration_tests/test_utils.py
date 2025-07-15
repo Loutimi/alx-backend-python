@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import unittest
 from nose.tools import assert_equal
 from parameterized import parameterized
@@ -11,3 +13,7 @@ class TestAccessNestedMap(unittest.TestCase):
      ])
      def test_access_nested_map(self,input_name,input_value,path_name,expected_value):
           assert_equal(access_nested_map(input_value, path_name), expected_value)
+
+
+if __name__ == "__main__":
+     unittest.main()
