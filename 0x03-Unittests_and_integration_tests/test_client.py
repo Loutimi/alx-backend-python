@@ -32,12 +32,14 @@ class TestGithubOrgClient(unittest.TestCase):
         mock_get_json.assert_called_once_with(
             f"https://api.github.com/orgs/{org_name}"
         )
-    
+
     def test_public_repos_url(self) -> None:
         """Test that _public_repos_url returns the repos_url from org data."""
         payload = {"repos_url": "https://api.github.com/orgs/test-org/repos"}
 
-        with patch.object(GithubOrgClient, "org", new_callable=property) as mock_org:
+        with patch.object(
+            GithubOrgClient, "org", new_callable=property
+        ) as mock_org:
             mock_org.return_value = payload
 
             client = GithubOrgClient("test-org")
