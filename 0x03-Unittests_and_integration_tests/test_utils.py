@@ -25,19 +25,16 @@ class TestAccessNestedMap(unittest.TestCase):
         result = access_nested_map(nested_map, key_path)
         self.assertEqual(result, expected_value)
 
-    @parameterized.expand([
-        ({}, ("a",), KeyError),
-        ({"a": 1}, ("a", "b"), TypeError),
-    ])
-    def test_access_nested_map_exception(
-        self,
-        nested_map: dict,
-        key_path: tuple,
-        expected_exception: type
-    ) -> None:
-        """Test that access_nested_map raises the correct exception."""
-        with self.assertRaises(expected_exception):
-            access_nested_map(nested_map, key_path)
+    def test_access_nested_map_exception(self) -> None:
+        """Test access_nested_map raises correct exception with correct message."""
+        test_cases = [
+            ({}, ("a",), "'a'"),  # KeyError
+            ({"a": 1}, ("a", "b"), "'b'"),  # TypeError internally becomes KeyError
+        ]
+        for nested_map, path, expected_msg in test_cases:
+            with self.assertRaises(KeyError) as ctx:
+                access_nested_map(nested_map, path)
+            self.assertEqual(str(ctx.exception), expected_msg)
 
 
 class TestGetJson(unittest.TestCase):
