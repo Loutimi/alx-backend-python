@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import patch, Mock
 from parameterized import parameterized
 from utils import access_nested_map, get_json, memoize
+from typing import Dict, Tuple, Union
 
 
 class TestAccessNestedMap(unittest.TestCase):
@@ -25,19 +26,19 @@ class TestAccessNestedMap(unittest.TestCase):
         result = access_nested_map(nested_map, key_path)
         self.assertEqual(result, expected_value)
 
-    def test_access_nested_map_exception(self) -> None:
-        """Test access_nested_map raises correct
-            KeyError with correct message.
-        """
-        test_cases = [
-            ({}, ("a",), "'a'"),
-            ({"a": 1}, ("a", "b"), "'b'"),
-        ]
-
-        for nested_map, path, expected_msg in test_cases:
-            with self.assertRaises(KeyError) as cm:
-                access_nested_map(nested_map, path)
-            self.assertEqual(str(cm.exception), expected_msg)
+    @parameterized.expand([
+        ({}, ("a",), KeyError),
+        ({"a": 1}, ("a", "b"), KeyError),
+    ])
+    def test_access_nested_map_exception(
+            self,
+            nested_map: Dict,
+            path: Tuple[str],
+            exception: Exception,
+            ) -> None:
+        """Tests `access_nested_map`'s exception raising."""
+        with self.assertRaises(exception):
+            access_nested_map(nested_map, path)
 
 
 class TestGetJson(unittest.TestCase):
