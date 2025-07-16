@@ -2,7 +2,7 @@
 """A module for testing functions in the client module."""
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 from parameterized import parameterized
 from client import GithubOrgClient
 from utils import get_json
@@ -61,6 +61,7 @@ class TestGithubOrgClient(unittest.TestCase):
         with patch.object(
             GithubOrgClient,
             "_public_repos_url",
+            new_callable=PropertyMock,
             return_value="https://fake-url.com/org/repos"
         ) as mock_repos_url:
             client = GithubOrgClient("test-org")
@@ -70,6 +71,6 @@ class TestGithubOrgClient(unittest.TestCase):
             self.assertEqual(repos, ["repo1", "repo2", "repo3"])
 
             # Ensure both mocks were called once
-            url = "https://fake-url.com/org/repos"
-            mock_get_json.assert_called_once_with(url)
+            url_example = "https://fake-url.com/org/repos"
+            mock_get_json.assert_called_once_with(url_example)
             mock_repos_url.assert_called_once()
