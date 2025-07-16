@@ -86,8 +86,9 @@ class TestGithubOrgClient(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-# Preprocess fixture into format parameterized_class expects
-org_payload, repos_payload = TEST_PAYLOAD[0]
+first_fixture = TEST_PAYLOAD[0]
+org_payload = first_fixture[0]
+repos_payload = first_fixture[1]
 
 expected_repos = [repo["name"] for repo in repos_payload]
 apache2_repos = [
