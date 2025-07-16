@@ -7,7 +7,7 @@ from unittest.mock import patch, PropertyMock, Mock
 from parameterized import parameterized, parameterized_class
 from client import GithubOrgClient
 from utils import get_json
-from fixtures import org_payload, repos_payload, expected_repos, apache2_repos
+from fixtures import TEST_PAYLOAD
 
 
 class TestGithubOrgClient(unittest.TestCase):
@@ -80,10 +80,21 @@ class TestGithubOrgClient(unittest.TestCase):
         ({"license": {"key": "my_license"}}, "my_license", True),
         ({"license": {"key": "other_license"}}, "my_license", False),
     ])
-    def test_has_license(self, repo, license_key, expected):
+    def test_has_license(self, repo, license_key, expected) -> None:
         """Test that has_license correctly identifies matching license keys."""
         result = GithubOrgClient.has_license(repo, license_key)
         self.assertEqual(result, expected)
+
+
+# Preprocess fixture into format parameterized_class expects
+org_payload, repos_payload = TEST_PAYLOAD[0]
+
+expected_repos = [repo["name"] for repo in repos_payload]
+apache2_repos = [
+    repo["name"]
+    for repo in repos_payload
+    if repo.get("license", {}).get("key") == "apache-2.0"
+]
 
 
 @parameterized_class([{
