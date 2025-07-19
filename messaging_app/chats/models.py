@@ -10,6 +10,10 @@ class User(AbstractUser):
     )
 
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, db_index=True)
+    first_name = models.CharField(max_length=20, null=False)
+    last_name = models.CharField(max_length=20, null=False)
+    email = models.EmailField(unique=True, null=False)
+    # password_hash = models.CharField(max_length=50, null=False)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
