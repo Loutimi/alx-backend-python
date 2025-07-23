@@ -1,6 +1,6 @@
-from rest_framework.permissions import BasePermission
+from rest_framework import permissions
 
-class IsParticipant(BasePermission):
+class IsParticipant(permissions.BasePermission):
     """
     Custom permission to only allow users to access conversations or messages
     where they are participants.
