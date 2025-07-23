@@ -16,32 +16,32 @@ class UserSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     message_body = serializers.CharField(max_length=1000)
     sender = UserSerializer(read_only=True)
-    sender_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True)
 
     class Meta:
         model = Message
-        fields = ['message_id', 'sender', 'sender_id', 'message_body', 'sent_at']
+        fields = ['message_id', 'sender', 'message_body', 'sent_at']
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    participants = UserSerializer(many=True, read_only=True)
-    participant_ids = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=User.objects.all(),
-        write_only=True
+    participants = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
     )
-    messages = MessageSerializer(many=True, read_only=True)
+    participant_ids = serializers.ListField(
+        write_only=True,
+        child=serializers.UUIDField()
+    )
 
     class Meta:
         model = Conversation
-        fields = ['conversation_id', 'participants', 'participant_ids', 'created_at', 'messages']
+        fields = ['conversation_id', 'participants', 'participant_ids', 'created_at']
 
     def create(self, validated_data):
         participant_ids = validated_data.pop('participant_ids')
+        users = User.objects.filter(user_id__in=participant_ids)
 
-        if len(participant_ids) < 2:
-            raise serializers.ValidationError("A conversation must have at least two participants.")
+        if users.count() != len(participant_ids):
+            raise serializers.ValidationError("One or more participant_ids are invalid.")
 
-        conversation = Conversation.objects.create(**validated_data)
-        conversation.participants.set(participant_ids)
+        conversation = Conversation.objects.create()
+        conversation.participants.set(users)
         return conversation

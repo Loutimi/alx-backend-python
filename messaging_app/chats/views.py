@@ -14,12 +14,13 @@ class ConversationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsParticipantOfConversation]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     ordering_fields = ['created_at']
+    ordering = ['created_at']
 
     def get_queryset(self):
-        return self.queryset.filter(participants=self.request.user)
+        return self.queryset.filter(participants__user_id=self.request.user.user_id)
 
     def perform_create(self, serializer):
-        serializer.save(participants=[self.request.user])
+        serializer.save()
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -50,7 +51,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         conversation_id = self.kwargs.get("conversation_pk")
         return Message.objects.filter(
-            conversation__id=conversation_id,
+            conversation__conversation_id=conversation_id,
             conversation__participants=self.request.user
         )
 

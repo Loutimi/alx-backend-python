@@ -18,6 +18,11 @@ class User(AbstractUser):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def id(self):
+        return self.user_id
+
+
     def __str__(self):
         return f"{self.username} ({self.role})"
 
@@ -33,7 +38,7 @@ class Conversation(models.Model):
 
 class Message(models.Model):
     message_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, db_index=True)
-    sender_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages')
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
     message_body = models.TextField(null=False)
     sent_at = models.DateTimeField(auto_now_add=True)
