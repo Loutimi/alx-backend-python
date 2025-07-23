@@ -11,10 +11,18 @@ class IsParticipantOfConversation(permissions.BasePermission):
         return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
-        if hasattr(obj, 'participants'):
-            # For Conversation objects
-            return request.user in obj.participants.all()
-        elif hasattr(obj, 'conversation'):
-            # For Message objects
-            return request.user in obj.conversation.participants.all()
+        # SAFE METHODS: GET, HEAD, OPTIONS
+        if request.method in permissions.SAFE_METHODS:
+            if hasattr(obj, 'participants'):
+                return request.user in obj.participants.all()
+            elif hasattr(obj, 'conversation'):
+                return request.user in obj.conversation.participants.all()
+        
+        # WRITE METHODS: PUT, PATCH, DELETE
+        if request.method in ['PUT', 'PATCH', 'DELETE']:
+            if hasattr(obj, 'participants'):
+                return request.user in obj.participants.all()
+            elif hasattr(obj, 'conversation'):
+                return request.user in obj.conversation.participants.all()
+        
         return False
