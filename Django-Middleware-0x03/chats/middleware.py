@@ -35,3 +35,43 @@ class RestrictAccessByTimeMiddleware:
         if not (start_time <= current_time <= end_time):
             return JsonResponse({'error': 'Access is only allowed between 6 PM and 9 PM'}, status=403)
         return self.get_response(request)
+
+
+class OffensiveLanguageMiddleware:
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.message_log = {}  # Structure: {ip: [(timestamp1), (timestamp2), ...]}
+
+    def __call__(self, request):
+        if request.method == 'POST':
+            ip = self.get_client_ip(request)
+            current_time = time.time()
+            time_window = 60  # 1 minute
+            max_messages = 5
+
+            # Get or initialize IP log
+            message_times = self.message_log.get(ip, [])
+
+            # Remove timestamps older than 60 seconds
+            message_times = [t for t in message_times if current_time - t < time_window]
+
+            if len(message_times) >= max_messages:
+                return JsonResponse({
+                    "error": "Rate limit exceeded. Maximum 5 messages per minute allowed."
+                }, status=429)
+
+            # Log current message time
+            message_times.append(current_time)
+            self.message_log[ip] = message_times
+
+        return self.get_response(request)
+
+    def get_client_ip(self, request):
+        """Retrieve client's IP address considering proxy headers"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
