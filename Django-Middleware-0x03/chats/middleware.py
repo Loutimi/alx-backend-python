@@ -1,7 +1,7 @@
 from datetime import datetime
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('user_requests')
 
 class RequestLoggingMiddleware:
 
@@ -9,6 +9,10 @@ class RequestLoggingMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        user = request.user if request.user.is_authenticated else 'Anonymous'
-        logger.info(f"{datetime.now()} - User: {user} - Path: {request.path}")
+        user = request.user.username if hasattr(request, 'user') and request.user.is_authenticated else 'Anonymous'
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        path = request.path
+
+        logger.info(f"[{timestamp}] User: {user} - Path: {path}")
+
         return self.get_response(request)
