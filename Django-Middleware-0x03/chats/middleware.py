@@ -75,3 +75,16 @@ class OffensiveLanguageMiddleware:
         else:
             ip = request.META.get('REMOTE_ADDR')
         return ip
+
+
+class RolepermissionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Bypass if not targeting restricted methods
+        if request.method in ['DELETE', 'PUT', 'PATCH']:
+            user = request.user
+            if not user.is_authenticated or not (user.is_superuser or user.is_staff):
+                return JsonResponse({'error': 'Access is only allowed for admin or moderator'}, status=403)
+        return self.get_response(request)
