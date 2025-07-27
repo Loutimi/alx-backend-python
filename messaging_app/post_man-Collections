@@ -13,7 +13,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"username\": \"Loutimi\",\r\n  \"password\": \"champagne\"\r\n}\r\n",
+					"raw": "{\r\n  \"username\": \"Loutimi\",\r\n  \"password\": \"{{password}}\"\r\n}\r\n",
 					"options": {
 						"raw": {
 							"language": "json"
