@@ -126,3 +126,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_REDIRECT_URL = 'dashboard'      # After login, go to dashboard
 LOGOUT_REDIRECT_URL = 'login'        # After logout, go to login page
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
