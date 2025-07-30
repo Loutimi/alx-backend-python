@@ -5,9 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.shortcuts import get_object_or_404
 from django.db.models import Prefetch
-
 from .models import Message
 import json
+from django.views.decorators.cache import cache_page
+
 
 
 @csrf_exempt
@@ -65,6 +66,7 @@ def send_message(request):
     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
 
 
+@cache_page(60)
 @login_required
 def inbox(request):
     # This satisfies the exam check for Message.objects.filter
