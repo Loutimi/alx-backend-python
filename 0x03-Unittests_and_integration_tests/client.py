@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""A github org client
-"""
+"""A github org client"""
 from typing import (
     List,
     Dict,
@@ -14,8 +13,8 @@ from utils import (
 
 
 class GithubOrgClient:
-    """A Githib org client
-    """
+    """A Githib org client"""
+
     ORG_URL = "https://api.github.com/orgs/{org}"
 
     def __init__(self, org_name: str) -> None:
@@ -41,7 +40,8 @@ class GithubOrgClient:
         """Public repos"""
         json_payload = self.repos_payload
         public_repos = [
-            repo["name"] for repo in json_payload
+            repo["name"]
+            for repo in json_payload
             if license is None or self.has_license(repo, license)
         ]
 

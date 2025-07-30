@@ -1,5 +1,6 @@
 from seed import connect_to_prodev
 
+
 def paginate_users(page_size, offset):
     """
     Fetches a page of users from the database.
@@ -17,6 +18,7 @@ def paginate_users(page_size, offset):
     rows = cursor.fetchall()
     connection.close()
     return rows
+
 
 def lazy_pagination(page_size):
     """

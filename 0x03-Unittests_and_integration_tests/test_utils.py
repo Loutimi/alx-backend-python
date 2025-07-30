@@ -11,31 +11,32 @@ from typing import Dict, Tuple
 class TestAccessNestedMap(unittest.TestCase):
     """Test cases for the access_nested_map function."""
 
-    @parameterized.expand([
-        ({"a": 1}, ("a",), 1),
-        ({"a": {"b": 2}}, ("a",), {"b": 2}),
-        ({"a": {"b": 2}}, ("a", "b"), 2),
-    ])
+    @parameterized.expand(
+        [
+            ({"a": 1}, ("a",), 1),
+            ({"a": {"b": 2}}, ("a",), {"b": 2}),
+            ({"a": {"b": 2}}, ("a", "b"), 2),
+        ]
+    )
     def test_access_nested_map(
-        self,
-        nested_map: dict,
-        key_path: tuple,
-        expected_value: object
+        self, nested_map: dict, key_path: tuple, expected_value: object
     ) -> None:
         """Test that access_nested_map returns the correct value."""
         result = access_nested_map(nested_map, key_path)
         self.assertEqual(result, expected_value)
 
-    @parameterized.expand([
-        ({}, ("a",), KeyError),
-        ({"a": 1}, ("a", "b"), KeyError),
-    ])
+    @parameterized.expand(
+        [
+            ({}, ("a",), KeyError),
+            ({"a": 1}, ("a", "b"), KeyError),
+        ]
+    )
     def test_access_nested_map_exception(
-            self,
-            nested_map: Dict,
-            path: Tuple[str],
-            exception: Exception,
-            ) -> None:
+        self,
+        nested_map: Dict,
+        path: Tuple[str],
+        exception: Exception,
+    ) -> None:
         """Tests `access_nested_map`'s exception raising."""
         with self.assertRaises(exception):
             access_nested_map(nested_map, path)
@@ -44,17 +45,14 @@ class TestAccessNestedMap(unittest.TestCase):
 class TestGetJson(unittest.TestCase):
     """Test cases for the get_json function."""
 
-    @parameterized.expand([
-        ("http://example.com", {"payload": True}),
-        ("http://holberton.io", {"payload": False}),
-    ])
+    @parameterized.expand(
+        [
+            ("http://example.com", {"payload": True}),
+            ("http://holberton.io", {"payload": False}),
+        ]
+    )
     @patch("utils.requests.get")
-    def test_get_json(
-        self,
-        url: str,
-        expected_payload: dict,
-        mock_get: Mock
-    ) -> None:
+    def test_get_json(self, url: str, expected_payload: dict, mock_get: Mock) -> None:
         """Test that get_json returns the correct parsed JSON data."""
         mock_response = Mock()
         mock_response.json.return_value = expected_payload
@@ -83,7 +81,7 @@ class TestMemoize(unittest.TestCase):
                 """Return the result of a_method using memoization."""
                 return self.a_method()
 
-        with patch.object(TestClass, 'a_method', return_value=42) as mock:
+        with patch.object(TestClass, "a_method", return_value=42) as mock:
             obj = TestClass()
 
             result1 = obj.a_property

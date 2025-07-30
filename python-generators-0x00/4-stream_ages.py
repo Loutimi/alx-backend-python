@@ -1,5 +1,6 @@
 from seed import connect_to_prodev
 
+
 def stream_user_ages():
     """
     Generator that fetches user ages from the database one by one.
@@ -11,8 +12,9 @@ def stream_user_ages():
     cursor = connection.cursor()
     cursor.execute("SELECT age FROM user_data")
     for row in cursor:
-        yield row['age']
+        yield row["age"]
     connection.close()
+
 
 def calculate_average_age():
     """

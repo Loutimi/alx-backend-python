@@ -1,5 +1,6 @@
 import sqlite3
 
+
 class ExecuteQuery:
     def __init__(self, db_name, query, *params):
         self.db_name = db_name
@@ -11,10 +12,10 @@ class ExecuteQuery:
 
     def __enter__(self):
         """Establishes the database connection and executes the query."""
-        
+
         self.connection = sqlite3.connect(self.db_name)
         self.cursor = self.connection.cursor()
-       
+
         self.cursor.execute(self.query, self.params)
         self.results = self.cursor.fetchall()
         return self.results  # Return the results of the query
@@ -22,10 +23,10 @@ class ExecuteQuery:
     def __exit__(self, exc_type, exc_value, traceback):
         """Closes the database connection, ensuring cleanup."""
         if self.cursor:
-            
+
             self.cursor.close()
         if self.connection:
-           
+
             self.connection.commit()
             self.connection.close()
 

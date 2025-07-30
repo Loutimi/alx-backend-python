@@ -2,17 +2,18 @@ import os
 import mysql.connector
 from mysql.connector import Error
 
+
 def stream_users():
     """Stream user data as dictionaries for easier access"""
     connection = None
     cursor = None
-    
+
     try:
         connection = mysql.connector.connect(
             host=os.getenv("DB_HOST", "localhost"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
-            database="ALX_prodev"
+            database="ALX_prodev",
         )
 
         cursor = connection.cursor(dictionary=True)

@@ -5,18 +5,21 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+
 # Custom serializer to inject correct user_id
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
         # Inject UUID-based user_id into the token
-        token['user_id'] = str(user.user_id)
+        token["user_id"] = str(user.user_id)
         return token
+
 
 # Updated login view to use custom serializer
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
