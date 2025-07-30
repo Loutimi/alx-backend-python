@@ -1,0 +1,7 @@
+{% for reply in replies %}
+  <div>
+    <strong>{{ reply.sender }}:</strong> {{ reply.content }} <br>
+    <small>{{ reply.timestamp }}</small>
+  </div>
+  {% include 'messaging/replies.html' with replies=reply.replies.all depth=depth|add:"1" %}
+{% endfor %}

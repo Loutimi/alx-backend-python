@@ -1,0 +1,7 @@
+{% for message in messages %}
+  <div style="margin-left: 0;">
+    <strong>{{ message.sender }}:</strong> {{ message.content }} <br>
+    <small>{{ message.timestamp }}</small>
+  </div>
+  {% include 'messaging/replies.html' with replies=message.replies.all depth=1 %}
+{% endfor %}
