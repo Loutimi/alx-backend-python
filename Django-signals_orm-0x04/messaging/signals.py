@@ -27,17 +27,22 @@ def log_message_edit(sender, instance, **kwargs):
             pass
 
 
-# Post_delete signal on the User model to delete all messages,
 @receiver(post_delete, sender=User)
 def delete_related_user_data(sender, instance, **kwargs):
-    # Delete messages where the user is sender or recipient
-    Message.objects.filter(sender=instance).delete()
-    Message.objects.filter(recipient=instance).delete()
+    """
+    Deletes all messages, notifications, and message histories associated with a user
+    when the user is deleted.
+    """
 
-    # Delete notifications related to user’s messages
-    Notification.objects.filter(message__sender=instance).delete()
-    Notification.objects.filter(message__recipient=instance).delete()
+    # Fetch all message IDs sent or received by the user
+    messages = Message.objects.filter(sender=instance) | Message.objects.filter(recipient=instance)
+    message_ids = messages.values_list("id", flat=True)
 
-    # Delete message history related to the user’s messages
-    MessageHistory.objects.filter(message__sender=instance).delete()
-    MessageHistory.objects.filter(message__recipient=instance).delete()
+    # Delete message history linked to these messages
+    MessageHistory.objects.filter(message_id__in=message_ids).delete()
+
+    # Delete notifications linked to these messages
+    Notification.objects.filter(message_id__in=message_ids).delete()
+
+    # Delete the messages themselves
+    messages.delete()
