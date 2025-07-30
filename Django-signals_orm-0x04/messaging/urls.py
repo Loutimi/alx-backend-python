@@ -1,11 +1,13 @@
 from django.urls import path
+from . import views
 from django.contrib.auth import views as auth_views
-from .views import homepage, dashboard
 
 urlpatterns = [
-    path("", homepage, name="homepage"),
-    path("dashboard/", dashboard, name="dashboard"),
-    path(
-        "login/", auth_views.LoginView.as_view(template_name="login.html"), name="login"
-    ),
+    path("", views.homepage, name="homepage"),
+    path("dashboard/", views.dashboard, name="dashboard"),
+    path("login/", auth_views.LoginView.as_view(), name="login"),
+
+    path("api/send/", views.send_message, name="send_message"),
+    path("api/inbox/", views.inbox, name="inbox"),
+    path("api/delete-user/<int:id>/", views.delete_user, name="delete_user"),
 ]
