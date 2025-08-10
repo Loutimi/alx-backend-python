@@ -5,8 +5,8 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQLUSER: ${MYSQLUSER}
-      MYSQLDB: ${MYSQLDB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_DB: ${MYSQL_DB}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
