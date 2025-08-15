@@ -111,7 +111,7 @@ DATABASES = {
         'NAME': config('MYSQL_DB'),
         'USER': config('MYSQL_USER'),
         'PASSWORD': config('MYSQL_PASSWORD'),
-        'HOST': config('MYSQL_HOST', default='localhost'),
+        'HOST': config('MYSQL_HOST', default='db'),
         'PORT': '3306',
     }
 }
