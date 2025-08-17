@@ -1,7 +1,7 @@
 #!/bin/bash
 # Scale deployment to 3 replicas
 echo "Scaling Django app to 3 replicas..."
-kubectl scale --replicas=3 deployment/messaging-app
+kubectl scale deployment messaging-app --replicas=3
 
 # Verify multiple pods are running
 echo "Verifying pods..."
