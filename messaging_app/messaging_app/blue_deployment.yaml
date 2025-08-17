@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: django
-        image: messaging-image:latest
+        image: messaging-image:2.0
         ports:
         - containerPort: 8000
 
