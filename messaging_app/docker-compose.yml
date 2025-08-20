@@ -1,24 +1,39 @@
 services:
   db:
     image: mysql:8.0
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_USER: ${MYSQL_USER}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_DATABASE: ${MYSQL_DB}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
 
   web:
     build: .
-    command: python3 manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c "until python manage.py migrate; do
+               echo 'Waiting for DB...'
+               sleep 2
+             done &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
     ports:
       - "8000:8000"
     env_file:
       - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   mysql_data:
-
