@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Start Minikube (only if not already running)
+if ! minikube status | grep -q "host: Running"; then
+    echo "Starting Minikube..."
+    minikube start --driver=docker
+else
+    echo "Minikube is already running."
+fi
+
+# Show cluster info
+kubectl cluster-info
+
+# Show all pods
+kubectl get pods -A
