@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: messaging-app
-        image: messaging_app-web:latest
+        image: loutimi/messaging_app-web:latest
         ports:
         - containerPort: 8000
         envFrom:
