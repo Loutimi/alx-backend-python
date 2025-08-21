@@ -12,15 +12,28 @@ spec:
       labels:
         app: messaging-app
     spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for MySQL..."
+              until nc -z db 3306; do
+                echo "MySQL not ready yet, sleeping 2 seconds..."
+                sleep 2
+              done
+              echo "MySQL is up!"
       containers:
       - name: messaging-app
         image: loutimi/messaging_app-web:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8000
         envFrom:
         - secretRef:
             name: django-env
-
 
 ---
 apiVersion: v1
