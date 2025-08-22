@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Config variables
+DEPLOYMENT_FILE="blue_deployment.yaml"   # updated deployment file
+DEPLOYMENT_NAME="blue-deployment"
+SERVICE_HOST="switch-service"
+SERVICE_PORT=8000
+TEST_DURATION=60                          # seconds to continuously test the app
+SLEEP_INTERVAL=2                           # seconds between curl requests
+
+# Step 1: Apply updated deployment
+echo "Applying updated deployment..."
+kubectl apply -f $DEPLOYMENT_FILE
+
+# Step 2: Monitor rollout status
+echo "Monitoring rolling update progress..."
+kubectl rollout status deployment/$DEPLOYMENT_NAME
+
+# Step 3: Continuously test the app for downtime
+echo "Testing app availability during rollout for $TEST_DURATION seconds..."
+END_TIME=$((SECONDS+TEST_DURATION))
+
+while [ $SECONDS -lt $END_TIME ]; do
+    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$SERVICE_HOST:$SERVICE_PORT/)
+    if [ "$HTTP_STATUS" -ne 200 ]; then
+        echo "$(date): Warning! Received HTTP $HTTP_STATUS from the app."
+    else
+        echo "$(date): App is responding (HTTP $HTTP_STATUS)."
+    fi
+    sleep $SLEEP_INTERVAL
+done
+
+# Step 4: Verify rollout completion by checking current pods
+echo "Verifying rolling update completed. Listing pods:"
+kubectl get pods -l app=messaging,version=blue
+
+echo "Rolling update script completed successfully."
+
