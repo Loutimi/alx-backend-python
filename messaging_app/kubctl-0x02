@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Set the deployment files
+BLUE_DEPLOYMENT_FILE="blue_deployment.yaml"
+GREEN_DEPLOYMENT_FILE="green_deployment.yaml"
+SERVICE_FILE="kubeservice.yaml"
+
+# Deploy blue and green
+echo "Applying blue deployment..."
+kubectl apply -f $BLUE_DEPLOYMENT_FILE
+
+echo "Applying green deployment..."
+kubectl apply -f $GREEN_DEPLOYMENT_FILE
+
+echo "Applying service..."
+kubectl apply -f $SERVICE_FILE
+
+# Wait for pods to be ready
+echo "Waiting for pods to be ready..."
+kubectl rollout status deployment/blue-deployment
+kubectl rollout status deployment/green-deployment
+
+# Get green pods
+GREEN_PODS=$(kubectl get pods -l app=messaging,version=green -o jsonpath='{.items[*].metadata.name}')
+
+# Check logs of green pods for errors
+echo "Checking logs of green deployment pods for errors..."
+for pod in $GREEN_PODS; do
+    echo "Logs for pod: $pod"
+    kubectl logs $pod | grep -i "error" || echo "No errors found in $pod"
+done
+
+echo "Deployment check completed."
+
