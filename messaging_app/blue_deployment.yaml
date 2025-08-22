@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blue-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: messaging
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: messaging
+        version: blue
+    spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for MySQL..."
+              until nc -z db 3306; do
+                echo "MySQL not ready yet, sleeping 2 seconds..."
+                sleep 2
+              done
+              echo "MySQL is up!"
+      containers:
+      - name: messaging-app-blue
+        image: loutimi/messaging_app-web:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - secretRef:
+            name: django-env
