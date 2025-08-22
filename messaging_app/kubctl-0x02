@@ -2,7 +2,7 @@
 
 # Set the deployment files
 BLUE_DEPLOYMENT_FILE="blue_deployment.yaml"
-GREEN_DEPLOYMENT_FILE="green_deployment.yaml"
+GREEN_DEPLOYMENT_FILE="messaging_app/green_deployment.yaml"
 SERVICE_FILE="kubeservice.yaml"
 
 # Deploy blue and green
