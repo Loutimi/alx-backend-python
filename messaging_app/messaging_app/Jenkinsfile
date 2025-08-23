@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.10-slim'
-            args '-v /var/run/docker.sock:/var/run/docker.sock --user root'
-        }
-    }
+    agent any
 
     environment {
         GITHUB_CREDENTIALS = 'github-pat'
@@ -31,13 +26,24 @@ pipeline {
             steps {
                 echo 'Setting up Python environment...'
                 sh '''
-                    # Install Docker CLI in the Python container
-                    apt-get update && apt-get install -y docker.io curl
+                    # Update package list and install Python if not available
+                    apt-get update || echo "Package manager not found, continuing..."
                     
-                    # Setup Python virtual environment
+                    # Try to install Python
+                    if ! command -v python3 &> /dev/null; then
+                        echo "Installing Python3..."
+                        apt-get install -y python3 python3-pip python3-venv || echo "Could not install Python3"
+                    fi
+                    
+                    # Verify Python installation
+                    python3 --version
+                    
+                    # Create virtual environment
                     python3 -m venv venv
                     . venv/bin/activate
-                    pip install --upgrade pip
+                    
+                    # Upgrade pip
+                    python3 -m pip install --upgrade pip
                 '''
             }
         }
