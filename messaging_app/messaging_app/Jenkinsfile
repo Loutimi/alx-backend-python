@@ -10,12 +10,9 @@ pipeline {
             steps {
                 echo 'Pulling source code from GitHub...'
                 
-                withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
-                    sh '''
-                        git clone https://${GITHUB_TOKEN}@github.com/Loutimi/alx-backend-python.git
-                        cd alx-backend-python/messaging_app
-                    '''
-                }
+                git branch: 'main',
+                    credentialsId: 'github-pat',
+                    url: 'https://github.com/Loutimi/alx-backend-python.git'
             }
         }
         
@@ -35,10 +32,10 @@ pipeline {
                 echo 'Installing dependencies...'
                 sh '''
                     . venv/bin/activate
-                    if [ -f requirements.txt ]; then
-                        pip install -r requirements.txt
+                    if [ -f messaging_app/requirements.txt ]; then
+                        pip3 install -r messaging_app/requirements.txt
                     fi
-                    pip install pytest pytest-html pytest-cov
+                    pip3 install pytest pytest-html pytest-cov
                 '''
             }
         }
@@ -105,4 +102,3 @@ pipeline {
         }
     }
 }
-
