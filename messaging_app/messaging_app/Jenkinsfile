@@ -26,24 +26,44 @@ pipeline {
             steps {
                 echo 'Setting up Python environment...'
                 sh '''
-                    # Update package list and install Python if not available
-                    apt-get update || echo "Package manager not found, continuing..."
-                    
-                    # Try to install Python
-                    if ! command -v python3 &> /dev/null; then
-                        echo "Installing Python3..."
-                        apt-get install -y python3 python3-pip python3-venv || echo "Could not install Python3"
+                    # Check if we have sudo access and try to install Python
+                    if command -v python3 &> /dev/null; then
+                        echo "Python3 found: $(python3 --version)"
+                    elif command -v python &> /dev/null; then
+                        echo "Python found: $(python --version)"
+                        ln -sf $(which python) /tmp/python3 || true
+                        export PATH="/tmp:$PATH"
+                    else
+                        # Try with sudo if available
+                        if command -v sudo &> /dev/null; then
+                            echo "Trying to install Python3 with sudo..."
+                            sudo apt-get update && sudo apt-get install -y python3 python3-pip python3-venv
+                        else
+                            echo "No Python found and no sudo access. Trying alternative methods..."
+                            # Try to use any available Python version
+                            if ls /usr/bin/python* 2>/dev/null; then
+                                echo "Found Python versions:"
+                                ls -la /usr/bin/python*
+                                # Use the first available Python version
+                                PYTHON_BIN=$(ls /usr/bin/python* | head -1)
+                                ln -sf $PYTHON_BIN /tmp/python3 || true
+                                export PATH="/tmp:$PATH"
+                            else
+                                echo "ERROR: No Python installation found"
+                                exit 1
+                            fi
+                        fi
                     fi
                     
-                    # Verify Python installation
-                    python3 --version
+                    # Verify Python is now available
+                    python3 --version || python --version
                     
                     # Create virtual environment
-                    python3 -m venv venv
+                    python3 -m venv venv || python -m venv venv
                     . venv/bin/activate
                     
                     # Upgrade pip
-                    python3 -m pip install --upgrade pip
+                    pip install --upgrade pip
                 '''
             }
         }
@@ -53,10 +73,17 @@ pipeline {
                 echo 'Installing dependencies...'
                 sh '''
                     . venv/bin/activate
-                    if [ -f messaging_app/requirements.txt ]; then
-                        pip3 install -r messaging_app/requirements.txt
+                    
+                    # Check if we have pip
+                    if ! command -v pip &> /dev/null; then
+                        echo "Installing pip..."
+                        python3 -m ensurepip --upgrade || python -m ensurepip --upgrade
                     fi
-                    pip3 install pytest pytest-html pytest-cov
+                    
+                    if [ -f messaging_app/requirements.txt ]; then
+                        pip install -r messaging_app/requirements.txt
+                    fi
+                    pip install pytest pytest-html pytest-cov
                 '''
             }
         }
