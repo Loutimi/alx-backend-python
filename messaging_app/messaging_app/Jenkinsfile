@@ -36,7 +36,6 @@ pipeline {
             }
         }
 
-
         stage('Setup Environment') {
             steps {
                 dir("${PROJECT_PATH}") {
@@ -84,7 +83,9 @@ pipeline {
 
     post {
         always {
-            cleanWs()
+            node {
+                cleanWs()
+            }
         }
         success {
             echo 'Pipeline completed successfully!'
