@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'python:3.10-slim'
-            args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
+            args '-v /var/run/docker.sock:/var/run/docker.sock --user root'
         }
     }
 
@@ -145,10 +145,16 @@ pipeline {
     post {
         always {
             echo 'Pipeline completed!'
-            // Clean up Docker images to save space
-            sh '''
-                docker rmi -f $(docker images -q ${DOCKER_REPO}/${DOCKER_IMAGE}) || true
-            '''
+            // Clean up Docker images to save space - wrap in node context
+            script {
+                try {
+                    sh '''
+                        docker rmi -f $(docker images -q ${DOCKER_REPO}/${DOCKER_IMAGE}) || true
+                    '''
+                } catch (Exception e) {
+                    echo "Failed to clean up Docker images: ${e.getMessage()}"
+                }
+            }
             cleanWs()
         }
         success {
