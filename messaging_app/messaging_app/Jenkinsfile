@@ -1,7 +1,9 @@
 pipeline {
     agent any
-    
+
     environment {
+        GITHUB_CREDENTIALS = 'github-pat'
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
         PYTHON_VERSION = '3.10'
         DOCKER_IMAGE = 'messaging-app-j'
         DOCKER_TAG = "${BUILD_NUMBER}"
@@ -15,7 +17,7 @@ pipeline {
                 echo 'Pulling source code from GitHub...'
                 
                 git branch: 'main',
-                    credentialsId: 'github-pat',
+                    credentialsId: "${GITHUB_CREDENTIALS}",
                     url: 'https://github.com/Loutimi/alx-backend-python.git'
             }
         }
@@ -113,7 +115,7 @@ pipeline {
                 echo 'Pushing Docker image to registry...'
                 script {
                     // Use Docker Hub credentials
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKERHUB_CREDENTIALS}") {
                         // Push both tagged and latest versions
                         sh "docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}"
                         sh "docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:latest"
