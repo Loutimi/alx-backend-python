@@ -3,6 +3,10 @@ pipeline {
     
     environment {
         PYTHON_VERSION = '3.10'
+        DOCKER_IMAGE = 'messaging-app-j'
+        DOCKER_TAG = "${BUILD_NUMBER}"
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_REPO = 'loutimi'
     }
     
     stages {
@@ -87,15 +91,58 @@ pipeline {
                 archiveArtifacts artifacts: 'reports/**/*', fingerprint: true
             }
         }
+        
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building Docker image...'
+                script {
+                    // Build the Docker image
+                    def dockerImage = docker.build("${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}", "./messaging_app")
+                    
+                    // Tag as latest as well
+                    sh "docker tag ${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_REPO}/${DOCKER_IMAGE}:latest"
+                    
+                    // Store the image for use in push stage
+                    env.DOCKER_IMAGE_FULL = "${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}"
+                }
+            }
+        }
+        
+        stage('Push Docker Image') {
+            steps {
+                echo 'Pushing Docker image to registry...'
+                script {
+                    // Use Docker Hub credentials
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        // Push both tagged and latest versions
+                        sh "docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        sh "docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:latest"
+                    }
+                }
+            }
+            post {
+                success {
+                    echo "Successfully pushed Docker image: ${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}"
+                }
+                failure {
+                    echo 'Failed to push Docker image'
+                }
+            }
+        }
     }
     
     post {
         always {
             echo 'Pipeline completed!'
+            // Clean up Docker images to save space
+            sh '''
+                docker rmi -f $(docker images -q ${DOCKER_REPO}/${DOCKER_IMAGE}) || true
+            '''
             cleanWs()
         }
         success {
             echo 'Pipeline succeeded!'
+            echo "Docker image pushed successfully: ${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}"
         }
         failure {
             echo 'Pipeline failed!'
