@@ -1,198 +1,73 @@
 pipeline {
     agent any
-
+    
     environment {
         GITHUB_CREDENTIALS = 'github-pat'
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
-        PYTHON_VERSION = '3.10'
-        DOCKER_IMAGE = 'messaging-app-j'
-        DOCKER_TAG = "${BUILD_NUMBER}"
-        DOCKER_REGISTRY = 'docker.io'
-        DOCKER_REPO = 'loutimi'
+        DOCKER_IMAGE_NAME = 'messaging-app-j'
+        PROJECT_PATH = 'messaging_app'
     }
     
     stages {
         stage('Checkout') {
             steps {
-                echo 'Pulling source code from GitHub...'
-                
                 git branch: 'main',
                     credentialsId: "${GITHUB_CREDENTIALS}",
-                    url: 'https://github.com/Loutimi/alx-backend-python.git'
+                    url: 'https://github.com/loutimi/alx-backend-python.git'
             }
         }
         
-        stage('Setup Python Environment') {
+        stage('Setup Environment') {
             steps {
-                echo 'Setting up Python environment...'
-                sh '''
-                    # Check if we have sudo access and try to install Python
-                    if command -v python3 &> /dev/null; then
-                        echo "Python3 found: $(python3 --version)"
-                    elif command -v python &> /dev/null; then
-                        echo "Python found: $(python --version)"
-                        ln -sf $(which python) /tmp/python3 || true
-                        export PATH="/tmp:$PATH"
-                    else
-                        # Try with sudo if available
-                        if command -v sudo &> /dev/null; then
-                            echo "Trying to install Python3 with sudo..."
-                            sudo apt-get update && sudo apt-get install -y python3 python3-pip python3-venv
-                        else
-                            echo "No Python found and no sudo access. Trying alternative methods..."
-                            # Try to use any available Python version
-                            if ls /usr/bin/python* 2>/dev/null; then
-                                echo "Found Python versions:"
-                                ls -la /usr/bin/python*
-                                # Use the first available Python version
-                                PYTHON_BIN=$(ls /usr/bin/python* | head -1)
-                                ln -sf $PYTHON_BIN /tmp/python3 || true
-                                export PATH="/tmp:$PATH"
-                            else
-                                echo "ERROR: No Python installation found"
-                                exit 1
-                            fi
-                        fi
-                    fi
-                    
-                    # Verify Python is now available
-                    python3 --version || python --version
-                    
-                    # Create virtual environment
-                    python3 -m venv venv || python -m venv venv
-                    . venv/bin/activate
-                    
-                    # Upgrade pip
-                    pip install --upgrade pip
-                '''
-            }
-        }
-        
-        stage('Install Dependencies') {
-            steps {
-                echo 'Installing dependencies...'
-                sh '''
-                    . venv/bin/activate
-                    
-                    # Check if we have pip
-                    if ! command -v pip &> /dev/null; then
-                        echo "Installing pip..."
-                        python3 -m ensurepip --upgrade || python -m ensurepip --upgrade
-                    fi
-                    
-                    if [ -f messaging_app/requirements.txt ]; then
-                        pip install -r messaging_app/requirements.txt
-                    fi
-                    pip install pytest pytest-html pytest-cov
-                '''
+                dir("${PROJECT_PATH}") {
+                    sh '''
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                    '''
+                }
             }
         }
         
         stage('Run Tests') {
             steps {
-                echo 'Running tests with pytest...'
-                sh '''
-                    . venv/bin/activate
-                    mkdir -p reports
-                    pytest messaging_app/tests \
-                        --html=reports/pytest_report.html --self-contained-html \
-                        --cov=messaging_app --cov-report=xml \
-                        --cov-report=html:reports/coverage \
-                        --junitxml=reports/junit.xml
-                '''
+                dir("${PROJECT_PATH}") {
+                    sh '''
+                        . venv/bin/activate
+                        pytest --junitxml=test-results.xml --cov=. --cov-report=xml
+                    '''
+                }
             }
             post {
                 always {
-                    // Archive test results
-                    junit 'reports/junit.xml'
-                    
-                    // Archive HTML reports
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'reports',
-                        reportFiles: 'pytest_report.html',
-                        reportName: 'PyTest Report'
-                    ])
-                    
-                    // Archive coverage report
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'reports/coverage',
-                        reportFiles: 'index.html',
-                        reportName: 'Coverage Report'
-                    ])
+                    publishTestResults testResultsPattern: "${PROJECT_PATH}/test-results.xml"
+                    publishCoverage adapters: [coberturaAdapter("${PROJECT_PATH}/coverage.xml")], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
                 }
-            }
-        }
-        
-        stage('Generate Report') {
-            steps {
-                echo 'Test reports generated successfully!'
-                archiveArtifacts artifacts: 'reports/**/*', fingerprint: true
             }
         }
         
         stage('Build Docker Image') {
             steps {
-                echo 'Building Docker image...'
-                script {
-                    // Build the Docker image
-                    def dockerImage = docker.build("${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}", "./messaging_app")
-                    
-                    // Tag as latest as well
-                    sh "docker tag ${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_REPO}/${DOCKER_IMAGE}:latest"
-                    
-                    // Store the image for use in push stage
-                    env.DOCKER_IMAGE_FULL = "${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}"
-                }
-            }
-        }
-        
-        stage('Push Docker Image') {
-            steps {
-                echo 'Pushing Docker image to registry...'
-                script {
-                    // Use Docker Hub credentials
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKERHUB_CREDENTIALS}") {
-                        // Push both tagged and latest versions
-                        sh "docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}"
-                        sh "docker push ${DOCKER_REPO}/${DOCKER_IMAGE}:latest"
+                dir("${PROJECT_PATH}") {
+                    script {
+                        def image = docker.build("${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}")
+                        docker.withRegistry('https://registry.hub.docker.com', "${DOCKERHUB_CREDENTIALS}") {
+                            image.push()
+                            image.push("latest")
+                        }
                     }
                 }
-            }
-            post {
-                success {
-                    echo "Successfully pushed Docker image: ${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}"
-                }
-                failure {
-                    echo 'Failed to push Docker image'
-                }
-            }
-        }
-        
-        stage('Cleanup Docker Images') {
-            steps {
-                echo 'Cleaning up local Docker images...'
-                sh '''
-                    # Clean up Docker images to save space
-                    docker rmi -f $(docker images -q ${DOCKER_REPO}/${DOCKER_IMAGE}) || true
-                    docker system prune -f || true
-                '''
             }
         }
     }
     
     post {
         always {
-            echo 'Pipeline completed!'
+            cleanWs()
         }
         success {
-            echo 'Pipeline succeeded!'
-            echo "Docker image pushed successfully: ${DOCKER_REPO}/${DOCKER_IMAGE}:${DOCKER_TAG}"
+            echo 'Pipeline completed successfully!'
         }
         failure {
             echo 'Pipeline failed!'
