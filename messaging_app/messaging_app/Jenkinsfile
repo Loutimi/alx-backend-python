@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.10-slim'
+            args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
+        }
+    }
 
     environment {
         GITHUB_CREDENTIALS = 'github-pat'
@@ -26,6 +31,10 @@ pipeline {
             steps {
                 echo 'Setting up Python environment...'
                 sh '''
+                    # Install Docker CLI in the Python container
+                    apt-get update && apt-get install -y docker.io curl
+                    
+                    # Setup Python virtual environment
                     python3 -m venv venv
                     . venv/bin/activate
                     pip install --upgrade pip
