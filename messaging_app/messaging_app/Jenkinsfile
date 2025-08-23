@@ -1,0 +1,108 @@
+pipeline {
+    agent any
+    
+    environment {
+        PYTHON_VERSION = '3.10'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Pulling source code from GitHub...'
+                
+                withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                        git clone https://${GITHUB_TOKEN}@github.com/Loutimi/alx-backend-python.git
+                        cd alx-backend-python/messaging_app
+                    '''
+                }
+            }
+        }
+        
+        stage('Setup Python Environment') {
+            steps {
+                echo 'Setting up Python environment...'
+                sh '''
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                '''
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing dependencies...'
+                sh '''
+                    . venv/bin/activate
+                    if [ -f requirements.txt ]; then
+                        pip install -r requirements.txt
+                    fi
+                    pip install pytest pytest-html pytest-cov
+                '''
+            }
+        }
+        
+        stage('Run Tests') {
+            steps {
+                echo 'Running tests with pytest...'
+                sh '''
+                    . venv/bin/activate
+                    mkdir -p reports
+                    pytest messaging_app/tests \
+                        --html=reports/pytest_report.html --self-contained-html \
+                        --cov=messaging_app --cov-report=xml \
+                        --cov-report=html:reports/coverage \
+                        --junitxml=reports/junit.xml
+                '''
+            }
+            post {
+                always {
+                    // Archive test results
+                    junit 'reports/junit.xml'
+                    
+                    // Archive HTML reports
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'reports',
+                        reportFiles: 'pytest_report.html',
+                        reportName: 'PyTest Report'
+                    ])
+                    
+                    // Archive coverage report
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'reports/coverage',
+                        reportFiles: 'index.html',
+                        reportName: 'Coverage Report'
+                    ])
+                }
+            }
+        }
+        
+        stage('Generate Report') {
+            steps {
+                echo 'Test reports generated successfully!'
+                archiveArtifacts artifacts: 'reports/**/*', fingerprint: true
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo 'Pipeline completed!'
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
+
