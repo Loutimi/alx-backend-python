@@ -62,7 +62,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "messaging_app.settings")
 django.setup()
 
 pytest.main([
-    "../chats/tests.py",
+    "chats/tests.py",
     "--html=reports/pytest_report.html",
     "--self-contained-html",
     "--cov=messaging_app",
