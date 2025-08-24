@@ -47,6 +47,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install mysqlclient
           pip install -r messaging_app/requirements.txt
+          pip install flake8 coverage
+
+      - name: Run Flake8 Linting
+        run: |
+          echo "Running flake8..."
+          flake8 messaging_app --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 messaging_app --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+        continue-on-error: false
 
       - name: Wait for MySQL
         run: |
@@ -58,5 +66,14 @@ jobs:
       - name: Run migrations
         run: python manage.py migrate
 
-      - name: Run tests
-        run: python manage.py test
+      - name: Run tests with coverage
+        run: |
+          coverage run manage.py test
+          coverage report
+          coverage html
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: htmlcov
