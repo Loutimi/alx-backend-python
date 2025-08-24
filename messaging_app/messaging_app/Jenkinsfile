@@ -61,17 +61,22 @@ pipeline {
         
         stage('Run Tests') {
             steps {
-                echo 'Running tests with pytest...'
-                sh '''
-                    . venv/bin/activate
-                    export DJANGO_SETTINGS_MODULE=messaging_app.settings
-                    mkdir -p reports
-                    pytest messaging_app/chats/tests.py \
-                        --html=reports/pytest_report.html --self-contained-html \
-                        --cov=messaging_app --cov-report=xml \
-                        --cov-report=html:reports/coverage \
-                        --junitxml=reports/junit.xml
-                '''
+                // Load .env file from Jenkins credentials
+                withCredentials([file(credentialsId: 'messaging-app-env', variable: 'ENV_FILE')]) {
+                    sh '''
+                        . venv/bin/activate
+                        set -a
+                        source $ENV_FILE
+                        set +a
+                        
+                        mkdir -p reports
+                        pytest messaging_app/chats/tests.py \
+                            --html=reports/pytest_report.html --self-contained-html \
+                            --cov=messaging_app --cov-report=xml \
+                            --cov-report=html:reports/coverage \
+                            --junitxml=reports/junit.xml
+                    '''
+                }
             }
             post {
                 always {
