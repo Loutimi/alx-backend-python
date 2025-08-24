@@ -37,3 +37,6 @@ def test_create_message():
     assert msg.sender == sender
     assert msg.conversation == conv
     assert msg.message_body == "Hello!"
+
+def test_simple_function():
+    assert 1 + 1 == 2  
