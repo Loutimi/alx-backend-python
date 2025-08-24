@@ -64,6 +64,7 @@ pipeline {
                 // Load .env file from Jenkins credentials
                 withCredentials([file(credentialsId: 'messaging-app-env', variable: 'ENV_FILE')]) {
                     sh '''
+                        bash -c "
                         . venv/bin/activate
                         set -a
                         . $ENV_FILE
@@ -75,6 +76,7 @@ pipeline {
                             --cov=messaging_app --cov-report=xml \
                             --cov-report=html:reports/coverage \
                             --junitxml=reports/junit.xml
+                        "    
                     '''
                 }
             }
