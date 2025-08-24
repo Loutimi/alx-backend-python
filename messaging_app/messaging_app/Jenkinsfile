@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        GITHUB_CREDENTIALS = 'github-pat'
+        GITHUB_CREDENTIALS = 'github-credentials'
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
         PYTHON_VERSION = '3.11'
         DOCKER_IMAGE = 'messaging-app-j'
