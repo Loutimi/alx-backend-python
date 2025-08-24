@@ -64,6 +64,7 @@ pipeline {
                 echo 'Running tests with pytest...'
                 sh '''
                     . venv/bin/activate
+                    export DJANGO_SETTINGS_MODULE=messaging_app.settings
                     mkdir -p reports
                     pytest messaging_app/chats/tests.py \
                         --html=reports/pytest_report.html --self-contained-html \
