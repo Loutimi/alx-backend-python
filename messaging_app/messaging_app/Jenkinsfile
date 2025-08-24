@@ -49,6 +49,7 @@ pipeline {
                 withCredentials([file(credentialsId: 'messaging-app-env', variable: 'ENV_FILE')]) {
                     sh '''
                         . venv/bin/activate
+                        cd messaging_app
                         mkdir -p reports reports/coverage
                         python - <<END
 import os
