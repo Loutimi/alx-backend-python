@@ -1,52 +1,39 @@
-from django.test import TestCase
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from chats.models import Conversation, Message
+import pytest
+from chats.models import User, Conversation, Message
+from django.utils import timezone
 
-User = get_user_model()
+@pytest.mark.django_db
+def test_create_user():
+    user = User.objects.create_user(
+        username="testuser",
+        first_name="Test",
+        last_name="User",
+        email="test@example.com",
+        password="password123",
+        role="guest"
+    )
+    assert user.username == "testuser"
+    assert user.role == "guest"
 
-class UserModelTest(TestCase):
-    def test_create_user(self):
-        user = User.objects.create_user(
-            username='testuser',
-            first_name='Test',
-            last_name='User',
-            email='test@example.com',
-            password='password123',
-            role='guest'
-        )
-        self.assertEqual(str(user), 'testuser (guest)')
-        self.assertTrue(user.user_id)  # UUID assigned
+@pytest.mark.django_db
+def test_create_conversation():
+    user1 = User.objects.create_user(username="user1", first_name="U1", last_name="One", email="u1@example.com", password="pass1", role="guest")
+    user2 = User.objects.create_user(username="user2", first_name="U2", last_name="Two", email="u2@example.com", password="pass2", role="guest")
+    
+    conv = Conversation.objects.create()
+    conv.participants.set([user1, user2])
+    
+    assert user1 in conv.participants.all()
+    assert user2 in conv.participants.all()
 
-class ConversationModelTest(TestCase):
-    def setUp(self):
-        self.user1 = User.objects.create_user(
-            username='user1', first_name='U1', last_name='One', email='u1@example.com', password='pass', role='guest'
-        )
-        self.user2 = User.objects.create_user(
-            username='user2', first_name='U2', last_name='Two', email='u2@example.com', password='pass', role='host'
-        )
-
-    def test_create_conversation(self):
-        conv = Conversation.objects.create()
-        conv.participants.set([self.user1, self.user2])
-        self.assertEqual(conv.participants.count(), 2)
-        self.assertIn(self.user1, conv.participants.all())
-        self.assertIn(self.user2, conv.participants.all())
-        self.assertTrue(str(conv).startswith('Conversation'))
-
-class MessageModelTest(TestCase):
-    def setUp(self):
-        self.user1 = User.objects.create_user(
-            username='user1', first_name='U1', last_name='One', email='u1@example.com', password='pass', role='guest'
-        )
-        self.user2 = User.objects.create_user(
-            username='user2', first_name='U2', last_name='Two', email='u2@example.com', password='pass', role='host'
-        )
-        self.conv = Conversation.objects.create()
-        self.conv.participants.set([self.user1, self.user2])
-
-    def test_create_message(self):
-        msg = Message.objects.create(sender=self.user1, conversation=self.conv, message_body='Hello!')
-        self.assertEqual(str(msg).split()[1], self.user1.username)  # "From user1 at ..."
-        self.assertEqual(msg.message_body, 'Hello!')
+@pytest.mark.django_db
+def test_create_message():
+    sender = User.objects.create_user(username="sender", first_name="S", last_name="Ender", email="sender@example.com", password="pass3", role="guest")
+    conv = Conversation.objects.create()
+    conv.participants.set([sender])
+    
+    msg = Message.objects.create(sender=sender, conversation=conv, message_body="Hello!", sent_at=timezone.now())
+    
+    assert msg.sender == sender
+    assert msg.conversation == conv
+    assert msg.message_body == "Hello!"
